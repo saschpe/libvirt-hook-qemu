@@ -6,16 +6,18 @@ Libvirt hook for setting up iptables port-forwarding rules when using NAT-ed
 networking.
 """
 __author__ = "Sascha Peilicke <saschpe@gmx.de>"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
+import os
 import json
 import subprocess
 import sys
 
 
-CONFIG_FILENAME = "qemu.json"
-CONFIG_SCHEMA_FILENAME = "qemu.schema.json"
+CONFIG_PATH = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILENAME = os.path.join(CONFIG_PATH, "qemu.json")
+CONFIG_SCHEMA_FILENAME = os.path.join(CONFIG_PATH, "qemu.schema.json")
 IPTABLES_BINARY = subprocess.check_output(["which", "iptables"]).strip()
 
 
