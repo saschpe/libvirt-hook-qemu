@@ -4,6 +4,7 @@
     "type" : "object",
     "patternProperties": {
         "^[A-Za-z_\\-]": {
+            "title": "Libvirt domain name",
             "type": "object",
             "properties": {
                 "interface": { "type": "string" },
@@ -13,10 +14,20 @@
                     "type": "object",
                     "patternProperties": {
                         "^tcp|udp|icmp": {
+                            "title": "Per-protocol port mapping",
                             "type": "array",
                             "items": {
-                                "type": "array"
+                                "title": "Public / private port map list",
+                                "type": "array",
+                                "items": {
+                                    "title": "Public / private port pair",
+                                    "type": "integer"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "additionalItems": false
                             },
+                            "additionalItems": false,
                             "minItems": 1,
                             "uniqueItems": true
                         }
