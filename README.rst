@@ -8,29 +8,19 @@ networking for qemu domains.
 Installation
 ------------
 
-To install the hooks script, you may have to create the appropriate directory
-first:
+To install the hook script and it's configuration files, simply use the
+:file:`Makefile`:
 
 .. code-block:: bash
 
-    $ sudo mkdir -p /etc/libvirt/hooks
+    $ sudo make install
 
-Afterwards, just copy the script and the example configuration file into
-:file:`/etc/libvirt/hooks` and set the executable bit: 
-
-.. code-block:: bash
-
-    $ sudo cp qemu qemu.json /etc/libvirt/hooks/
-    $ sudo chmod +x /etc/libvirt/hooks/qemu
-
-Make sure to customize :file:`/etc/libvirt/hooks/qemu.json` to your needs.
-Finally, restart libvirt:
+Afterwards customize :file:`/etc/libvirt/hooks/qemu.json` to your needs. The
+files can be removed again with:
 
 .. code-block:: bash
 
-    $ sudo service libvirtd restart
-
-This should work across distros, otherwise use rclibvirtd or systemd.
+    $ sudo make clean
 
 
 Author
