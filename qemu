@@ -1,0 +1,104 @@
+#!/usr/bin/python3
+
+"""Libvirt port-forwarding hook.
+
+LibVirt hook for setting up iptables port-forwarding rules when using NAT-ed
+networking for qemu domains.
+"""
+__author__ = "Sascha Peilicke <saschpe@gmx.de>"
+__version__ = "0.1.0"
+
+
+import json
+import subprocess
+import sys
+
+
+CONFIG_FILENAME = "qemu.json"
+CONFIG_SCHEMA_FILENAME = "qemu.schema.json"
+IPTABLES_BINARY = subprocess.check_output(["which", "iptables"]).strip()
+
+
+def host_ip():
+    """Returns the default route interface IP (if any).
+
+    In other words, the public IP used to access the virtualization host. It
+    is used as default public IP for guest forwarding rules should they not
+    specify a different public IP to forward from.
+    """
+    if not hasattr(host_ip, "_host_ip"):
+        cmd = "ip route | grep default | cut -d' ' -f5"
+        default_route_interface = subprocess.check_output(cmd, shell=True).strip()
+        cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(default_route_interface)
+        host_ip._host_ip = subprocess.check_output(cmd, shell=True).strip()
+    return host_ip._host_ip
+
+
+def config(validate=True):
+    """Returns the hook configuration.
+
+    Assumes that the file /etc/libvirt/hooks/qemu.json exists and contains
+    JSON-formatted configuration data. Optionally tries to validate the
+    configuration if the 'jsonschema' module is available.
+
+    Args:
+        validate: Use JSON schema validation
+    """
+    if not hasattr(config, "_conf"):
+        with open(CONFIG_FILENAME, "r") as f:
+            config._conf = json.load(f)
+        if validate:
+            # Try schema validation but avoid hard 'jsonschema' requirement:
+            try:
+                import jsonschema
+                with open(CONFIG_SCHEMA_FILENAME, "r") as f:
+                    config._schema = json.load(f)
+                jsonschema.validate(config._conf,
+                                    config._schema,
+                                    format_checker=jsonschema.FormatChecker())
+            except ImportError:
+                pass
+    return config._conf
+
+
+def iptables_forward(action, domain):
+    """Set iptables port-forwarding rules based on domain configuration.
+
+    Args:
+        action: iptables rule actions (one of '-I', '-A' or '-D')
+        domain: Libvirt domain configuration
+    """
+    public_ip = domain.get("public_ip", host_ip())
+    # Iterate over protocols (tcp, udp, icmp, ...)
+    for protocol in domain["port_map"]:
+        # Iterate over all public/private port pairs for the protocol
+        for public_port, private_port in domain["port_map"].get(protocol):
+            args = [IPTABLES_BINARY,
+                    "-t", "nat", action, "PREROUTING",
+                    "-p", protocol,
+                    "-d", public_ip, "--dport", public_port,
+                    "-j", "DNAT", "--to", "{0}:{1}".format(domain["private_ip"], private_port)]
+            subprocess.call(args)
+
+            args = [IPTABLES_BINARY,
+                    "-t", "filter", action, "FORWARD",
+                    "-p", protocol,
+                    "--dport", private_port,
+                    "-j", "ACCEPT"]
+            if "interface" in domain:
+                args += ["-o", domain["interface"]]
+            subprocess.call(args)
+
+
+if __name__ == "__main__": 
+    if len(sys.argv) != 3:
+        print("Usage: ./qemu VIR_DOMAIN ACTION")
+        sys.exit(1)
+    vir_domain, action = sys.argv[1:3]
+    domain = config().get(vir_domain)
+    if domain is None:
+        sys.exit(0)
+    if action in ["stopped", "reconnect"]:
+        iptables_forward("-D", domain)
+    if action in ["start", "reconnect"]:
+        iptables_forward("-A", domain)

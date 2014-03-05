@@ -1,0 +1,17 @@
+{
+    "cloud-admin": {
+        "interface": "virbr1",
+        "private_ip": "192.168.124.10",
+        "port_map": { 
+            "tcp": [[1100, 3000]]
+        }
+    },
+    "cloud-node1": {
+        "interface": "virbr1",
+        "private_ip": "192.168.126.2",
+        "port_map": {
+            "tcp": [[1101, 80],
+                    [1102, 443]]
+        }
+    }
+}
