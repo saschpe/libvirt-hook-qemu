@@ -1,8 +1,8 @@
 Libvirt port-forwarding hook
 ============================
 
-LibVirt hook for setting up iptables port-forwarding rules when using NAT-ed
-networking for qemu domains.
+Libvirt hook for setting up iptables port-forwarding rules when using NAT-ed
+networking.
 
 
 Installation
