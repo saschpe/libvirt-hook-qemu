@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 """Libvirt port-forwarding hook.
 
@@ -28,9 +28,9 @@ def host_ip():
     """
     if not hasattr(host_ip, "_host_ip"):
         cmd = "ip route | grep default | cut -d' ' -f5"
-        default_route_interface = subprocess.check_output(cmd, shell=True).strip()
+        default_route_interface = subprocess.check_output(cmd, shell=True).decode().strip()
         cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(default_route_interface)
-        host_ip._host_ip = subprocess.check_output(cmd, shell=True).strip()
+        host_ip._host_ip = subprocess.check_output(cmd, shell=True).decode().strip()
     return host_ip._host_ip
 
 
@@ -76,14 +76,14 @@ def iptables_forward(action, domain):
             args = [IPTABLES_BINARY,
                     "-t", "nat", action, "PREROUTING",
                     "-p", protocol,
-                    "-d", public_ip, "--dport", public_port,
-                    "-j", "DNAT", "--to", "{0}:{1}".format(domain["private_ip"], private_port)]
+                    "-d", public_ip, "--dport", str(public_port),
+                    "-j", "DNAT", "--to", "{0}:{1}".format(domain["private_ip"], str(private_port))]
             subprocess.call(args)
 
             args = [IPTABLES_BINARY,
                     "-t", "filter", action, "FORWARD",
                     "-p", protocol,
-                    "--dport", private_port,
+                    "--dport", str(private_port),
                     "-j", "ACCEPT"]
             if "interface" in domain:
                 args += ["-o", domain["interface"]]
