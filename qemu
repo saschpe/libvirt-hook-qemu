@@ -91,9 +91,6 @@ def iptables_forward(action, domain):
 
 
 if __name__ == "__main__": 
-    if len(sys.argv) != 3:
-        print("Usage: ./qemu VIR_DOMAIN ACTION")
-        sys.exit(1)
     vir_domain, action = sys.argv[1:3]
     domain = config().get(vir_domain)
     if domain is None:
