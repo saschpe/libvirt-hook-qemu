@@ -15,8 +15,9 @@ To install the hook script and it's configuration files, simply use the
 
     $ sudo make install
 
-Afterwards customize :file:`/etc/libvirt/hooks/qemu.json` to your needs. The
-files can be removed again with:
+Afterwards customize :file:`/etc/libvirt/hooks/qemu.json` to your needs.
+This Makefile target can be invoked multiple times, already installed
+configuration files won't be touched. The files can be removed again with:
 
 .. code-block:: bash
 
