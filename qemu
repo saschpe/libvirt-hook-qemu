@@ -33,7 +33,7 @@ def host_ip():
         default_route_interface = subprocess.check_output(cmd, shell=True).decode().strip()
         cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(default_route_interface)
         host_ip._host_ip = subprocess.check_output(cmd, shell=True).decode().strip()
-    return host_ip._host_ip
+    return host_ip._host_ip.split('\n')[0]
 
 
 def config(validate=True):
