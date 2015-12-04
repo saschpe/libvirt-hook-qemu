@@ -85,7 +85,7 @@ def iptables_forward(action, domain):
             args = [IPTABLES_BINARY,
                     "-t", "filter", action, "FORWARD",
                     "-p", protocol,
-                    "--dport", str(private_port),
+                    "-d", domain["private_ip"], "--dport", str(private_port),
                     "-j", "ACCEPT"]
             if "interface" in domain:
                 args += ["-o", domain["interface"]]
