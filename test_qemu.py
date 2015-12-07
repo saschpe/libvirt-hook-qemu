@@ -1,8 +1,9 @@
+import imp
 import json
 import socket
 import unittest
 
-import qemu  # Our local libvirt hooks module
+qemu = imp.load_source('qemu', 'qemu')
 
 
 class QemuTestCase(unittest.TestCase):
