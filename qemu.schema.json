@@ -17,15 +17,20 @@
                             "title": "Per-protocol port mapping",
                             "type": "array",
                             "items": {
-                                "title": "Public / private port map list",
-                                "type": "array",
-                                "items": {
-                                    "title": "Public / private port pair",
+                                "oneOf": [{
+                                    "title": "public and private port",
                                     "type": "integer"
-                                },
-                                "minItems": 2,
-                                "maxItems": 2,
-                                "additionalItems": false
+                                  }, {
+                                    "title": "Public / private port map list",
+                                    "type": "array",
+                                    "items": {
+                                        "title": "Public / private port pair",
+                                        "type": "integer"
+                                    },
+                                    "minItems": 2,
+                                    "maxItems": 2,
+                                    "additionalItems": false
+                                }]
                             },
                             "additionalItems": false,
                             "minItems": 1,

@@ -74,7 +74,10 @@ def iptables_forward(action, domain):
     # Iterate over protocols (tcp, udp, icmp, ...)
     for protocol in domain["port_map"]:
         # Iterate over all public/private port pairs for the protocol
-        for public_port, private_port in domain["port_map"].get(protocol):
+        for port_map in domain["port_map"].get(protocol):
+            # allow a single integer 80 to be equivalent to [80, 80]
+            public_port, private_port = port_map if isinstance(port_map, list) else [port_map, port_map]
+
             args = [IPTABLES_BINARY,
                     "-t", "nat", action, "PREROUTING",
                     "-p", protocol,
