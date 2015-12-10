@@ -15,10 +15,10 @@ import subprocess
 import sys
 
 
-CONFIG_PATH = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILENAME = os.path.join(CONFIG_PATH, "qemu.json")
-CONFIG_SCHEMA_FILENAME = os.path.join(CONFIG_PATH, "qemu.schema.json")
-IPTABLES_BINARY = subprocess.check_output(["which", "iptables"]).strip()
+CONFIG_PATH = os.getenv('CONFIG_PATH') or os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(CONFIG_PATH, "qemu.json")
+CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(CONFIG_PATH, "qemu.schema.json")
+IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output(["which", "iptables"]).strip()
 
 
 def host_ip():
