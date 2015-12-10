@@ -127,7 +127,7 @@ def populate_chains(port_map, dnat_chain, fwd_chain, public_ip, private_ip):
         for ports in port_map[protocol]:
             # a single integer 80 is equivalent to [80, 80]
             public_port, private_port = ports if isinstance(ports, list) else [ports, ports]
-            dest = "{0}:{1}".format("private_ip", str(private_port))
+            dest = "{0}:{1}".format(private_ip, str(private_port))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", protocol,
                 "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest])
             subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", protocol,
