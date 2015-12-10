@@ -44,13 +44,16 @@ class QemuTestCase(unittest.TestCase):
         os.remove(outfile)
         return output
 
+    def dedent(self, str):
+        return textwrap.dedent(str[1:])
+
     def test_setup(self):
         port_map = {
             "udp": [53],
             "tcp": [[80, 8080], 443]
         }
 
-        expected_output = textwrap.dedent("""
+        expected_output = self.dedent("""
             -t nat -N DNAT-test
             -t filter -N FWD-test
             -t nat -A DNAT-test -p udp -d 192.168.1.1 --dport 53 -j DNAT --to 127.0.0.1:53
@@ -62,7 +65,7 @@ class QemuTestCase(unittest.TestCase):
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -I PREROUTING -d 192.168.1.1 -j DNAT-test
             -t filter -I FORWARD -d 127.0.0.1 -j FWD-test
-        """[1:])
+        """)
 
         def test_func():
             qemu.start_forwarding(port_map, "DNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
@@ -72,7 +75,7 @@ class QemuTestCase(unittest.TestCase):
         self.assertMultiLineEqual(output, expected_output)
 
     def test_teardown(self):
-        expected_output = textwrap.dedent("""
+        expected_output = self.dedent("""
             -t nat -D OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -D PREROUTING -d 192.168.1.1 -j DNAT-test
             -t filter -D FORWARD -d 127.0.0.1 -j FWD-test
@@ -80,7 +83,7 @@ class QemuTestCase(unittest.TestCase):
             -t nat -X DNAT-test
             -t filter -F FWD-test
             -t filter -X FWD-test
-        """[1:])
+        """)
 
         def test_func():
             qemu.stop_forwarding("DNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")

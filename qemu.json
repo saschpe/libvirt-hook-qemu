@@ -1,13 +1,11 @@
 {
     "cloud-admin": {
-        "interface": "virbr1",            // you can use comments
         "private_ip": "192.168.124.10",   /* both styles */
         "port_map": {
             "tcp": [[1100, 3000], 443]
         }
     },
     "cloud-node1": {
-        "interface": "virbr1",
         "private_ip": "192.168.126.2",
         "port_map": {
             "tcp": [[1101, 80],
