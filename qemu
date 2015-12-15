@@ -133,11 +133,8 @@ def populate_chains(port_map, dnat_chain, fwd_chain, public_ip, private_ip):
             subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", protocol,
                 "-d", private_ip, "--dport", str(private_port), "-j", "ACCEPT"])
 
-def establish_chains(action, dnat_chain, fwd_chain, public_ip, private_ip):
-    """ inserts or removes the custom chains.
-
-    if action is "-I" then the custom chains are inserted, otherwise "-D" deletes them
-    """
+def insert_chains(action, dnat_chain, fwd_chain, public_ip, private_ip):
+    """ inserts (action='-I') or removes (action='-D') the custom chains."""
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "OUTPUT", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "PREROUTING", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "filter", action, "FORWARD", "-d", private_ip, "-j", fwd_chain])
@@ -149,12 +146,12 @@ def start_forwarding(port_map, dnat_chain, fwd_chain, public_ip, private_ip):
     create_chain("nat", dnat_chain)
     create_chain("filter", fwd_chain)
     populate_chains(port_map, dnat_chain, fwd_chain, public_ip, private_ip)
-    establish_chains("-I", dnat_chain, fwd_chain, public_ip, private_ip)
+    insert_chains("-I", dnat_chain, fwd_chain, public_ip, private_ip)
 
 
 def stop_forwarding(dnat_chain, fwd_chain, public_ip, private_ip):
     """ tears down the iptables port-forwarding rules. """
-    establish_chains("-D", dnat_chain, fwd_chain, public_ip, private_ip)
+    insert_chains("-D", dnat_chain, fwd_chain, public_ip, private_ip)
     delete_chain("nat", dnat_chain)
     delete_chain("filter", fwd_chain)
 
