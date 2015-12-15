@@ -24,6 +24,14 @@ configuration files won't be touched. The files can be removed again with:
     $ sudo make clean
 
 
+Testing
+-------
+
+.. code-block:: python
+
+    python -m unittest discover
+
+
 Author
 ------
 
