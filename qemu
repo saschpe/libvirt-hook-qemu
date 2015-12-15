@@ -11,6 +11,7 @@ __version__ = "0.1.1"
 
 import os
 import json
+import re
 import subprocess
 import sys
 
@@ -19,6 +20,53 @@ CONFIG_PATH = os.getenv('CONFIG_PATH') or os.path.dirname(os.path.abspath(__file
 CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(CONFIG_PATH, "qemu.json")
 CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(CONFIG_PATH, "qemu.schema.json")
 IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output(["which", "iptables"]).strip()
+
+
+# Allow comments in json, copied from https://github.com/getify/JSON.minify
+def json_minify(string, strip_space=True):
+    tokenizer = re.compile('"|(/\*)|(\*/)|(//)|\n|\r')
+    end_slashes_re = re.compile(r'(\\)*$')
+
+    in_string = False
+    in_multi = False
+    in_single = False
+
+    new_str = []
+    index = 0
+
+    for match in re.finditer(tokenizer, string):
+
+        if not (in_multi or in_single):
+            tmp = string[index:match.start()]
+            if not in_string and strip_space:
+                # replace white space as defined in standard
+                tmp = re.sub('[ \t\n\r]+', '', tmp)
+            new_str.append(tmp)
+
+        index = match.end()
+        val = match.group()
+
+        if val == '"' and not (in_multi or in_single):
+            escaped = end_slashes_re.search(string, 0, match.start())
+
+            # start of string or unescaped quote character to end string
+            if not in_string or (escaped is None or len(escaped.group()) % 2 == 0):  # noqa
+                in_string = not in_string
+            index -= 1  # include " character in next catch
+        elif not (in_string or in_multi or in_single):
+            if val == '/*':
+                in_multi = True
+            elif val == '//':
+                in_single = True
+        elif val == '*/' and in_multi and not (in_string or in_single):
+            in_multi = False
+        elif val in '\r\n' and not (in_multi or in_string) and in_single:
+            in_single = False
+        elif not ((in_multi or in_single) or (val in ' \r\n\t' and strip_space)):  # noqa
+            new_str.append(val)
+
+    new_str.append(string[index:])
+    return ''.join(new_str)
 
 
 def host_ip():
@@ -48,7 +96,7 @@ def config(validate=True):
     """
     if not hasattr(config, "_conf"):
         with open(CONFIG_FILENAME, "r") as f:
-            config._conf = json.load(f)
+            config._conf = json.loads(json_minify(f.read()))
         if validate:
             # Try schema validation but avoid hard 'jsonschema' requirement:
             try:
@@ -95,7 +143,7 @@ def iptables_forward(action, domain):
             subprocess.call(args)
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     vir_domain, action = sys.argv[1:3]
     domain = config().get(vir_domain)
     if domain is None:
