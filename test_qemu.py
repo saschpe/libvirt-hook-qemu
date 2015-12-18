@@ -53,40 +53,59 @@ class QemuTestCase(unittest.TestCase):
             "tcp": [[80, 8080], 443]
         }
 
+        # in this test, public_ip is 192.168.1.1 and private_ip is 127.0.0.1
         expected_output = self.dedent("""
             -t nat -N DNAT-test
+            -t nat -N SNAT-test
             -t filter -N FWD-test
             -t nat -A DNAT-test -p udp -d 192.168.1.1 --dport 53 -j DNAT --to 127.0.0.1:53
+            -t nat -A SNAT-test -p udp -s 127.0.0.1 -d 127.0.0.1 --dport 53 -j MASQUERADE
             -t filter -A FWD-test -p udp -d 127.0.0.1 --dport 53 -j ACCEPT
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 80 -j DNAT --to 127.0.0.1:8080
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 80 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 8080 -j ACCEPT
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 443 -j DNAT --to 127.0.0.1:443
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 443 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -I PREROUTING -d 192.168.1.1 -j DNAT-test
+            -t nat -I POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
             -t filter -I FORWARD -d 127.0.0.1 -j FWD-test
         """)
 
+        # stub out the disable_bridge_filtering call
+        self.bridge_nf = False
+        def disable_bridge_filtering():
+            self.bridge_nf = True
+        self.old_bridge_filtering = qemu.disable_bridge_filtering
+        qemu.disable_bridge_filtering = disable_bridge_filtering
+
         def test_func():
-            qemu.start_forwarding(port_map, "DNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
+            qemu.start_forwarding(port_map, "DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
 
         output = self.capture_output(test_func)
         self.maxDiff = None
         self.assertMultiLineEqual(output, expected_output)
+        self.assertTrue(self.bridge_nf)
+
+        qemu.disable_bridge_filtering = self.old_bridge_filtering
 
     def test_teardown(self):
         expected_output = self.dedent("""
             -t nat -D OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -D PREROUTING -d 192.168.1.1 -j DNAT-test
+            -t nat -D POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
             -t filter -D FORWARD -d 127.0.0.1 -j FWD-test
             -t nat -F DNAT-test
             -t nat -X DNAT-test
+            -t nat -F SNAT-test
+            -t nat -X SNAT-test
             -t filter -F FWD-test
             -t filter -X FWD-test
         """)
 
         def test_func():
-            qemu.stop_forwarding("DNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
+            qemu.stop_forwarding("DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
 
         output = self.capture_output(test_func)
         self.maxDiff = None
