@@ -36,8 +36,6 @@ Networking
 ----------
 
 This section describes the theory behind the generated iptables statements.
-To see a real-world example, the test_setup function (in test_qemu.py)
-shows a simple JSON configuration and the iptables rules that it produces.
 
 Packets arriving on the public interface are DNATed to the virtual machine.
 This implements the actual port-forwarding.  Due to the way iptables is
@@ -45,17 +43,22 @@ implemented, the DNAT must occur in two chains: nat:PREROUTING for packets
 arriving on the public interface, and nat:OUTPUT for packets originating on
 the host.
 
-We also add rules to the FORWARD chain to ensure the repsonses to the
-DNATed packets return to the public IP address.
+We also add rules to the FORWARD chain to ensure the repsonses return.
 
 Finally, packets originating on the guest and sent to the host's public IP
-address are lost.  They are DNATed back to the guest like any other packet but,
-because the destination is now the same as the source, the reply is swallowed.
-Therefore, the host SNATs these packets to ensure the guest sends its reply
-back over the bridge.
+address need special handling.  They are DNATed back to the guest like all
+other packets but, because the destination is now the same as the source,
+the reply never leaves the guest.  Therefore, the host SNATs these packets
+to ensure the reply returns over the bridge.
+
+To see a real-world example, the ``test_setup`` function in test_qemu.py_
+demonstrates a simple JSON configuration and the iptables rules that it produces.
+
+.. _test_qemu.py: test_qemu.py
 
 
-Author
-------
+Authors
+-------
 
-Sascha Peilicke
+- Sascha Peilicke
+- Scott Bronson
