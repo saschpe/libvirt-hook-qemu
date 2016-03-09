@@ -60,13 +60,13 @@ class QemuTestCase(unittest.TestCase):
             -t filter -N FWD-test
             -t nat -A DNAT-test -p udp -d 192.168.1.1 --dport 53 -j DNAT --to 127.0.0.1:53
             -t nat -A SNAT-test -p udp -s 127.0.0.1 -d 127.0.0.1 --dport 53 -j MASQUERADE
-            -t filter -A FWD-test -p udp -d 127.0.0.1 --dport 53 -j ACCEPT
+            -t filter -A FWD-test -p udp -d 127.0.0.1 --dport 53 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 80 -j DNAT --to 127.0.0.1:8080
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 80 -j MASQUERADE
-            -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 8080 -j ACCEPT
+            -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 8080 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 443 -j DNAT --to 127.0.0.1:443
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 443 -j MASQUERADE
-            -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT
+            -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT -o virbr0
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -I PREROUTING -d 192.168.1.1 -j DNAT-test
             -t nat -I POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
@@ -81,7 +81,8 @@ class QemuTestCase(unittest.TestCase):
         qemu.disable_bridge_filtering = disable_bridge_filtering
 
         def test_func():
-            qemu.start_forwarding(port_map, "DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
+            domain = { "port_map": port_map, "interface": "virbr0" }
+            qemu.start_forwarding("DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1", domain)
 
         output = self.capture_output(test_func)
         self.maxDiff = None
