@@ -111,36 +111,61 @@ def config(validate=True):
     return config._conf
 
 
-def iptables_forward(action, domain):
-    """Set iptables port-forwarding rules based on domain configuration.
 
-    Args:
-        action: iptables rule actions (one of '-I', '-A' or '-D')
-        domain: Libvirt domain configuration
-    """
-    public_ip = domain.get("public_ip", host_ip())
-    # Iterate over protocols (tcp, udp, icmp, ...)
-    for protocol in domain["port_map"]:
-        # Iterate over all public/private port pairs for the protocol
-        for port_map in domain["port_map"].get(protocol):
-            # allow a single integer 80 to be equivalent to [80, 80]
-            public_port, private_port = port_map if isinstance(port_map, list) else [port_map, port_map]
+def create_chain(table, name):
+    """ Creates the named chain. """
+    subprocess.call([IPTABLES_BINARY, "-t", table, "-N", name])
 
-            args = [IPTABLES_BINARY,
-                    "-t", "nat", action, "PREROUTING",
-                    "-p", protocol,
-                    "-d", public_ip, "--dport", str(public_port),
-                    "-j", "DNAT", "--to", "{0}:{1}".format(domain["private_ip"], str(private_port))]
-            subprocess.call(args)
+def delete_chain(table, name):
+    """ Flushes and deletes the named chain. """
+    subprocess.call([IPTABLES_BINARY, "-t", table, "-F", name])
+    subprocess.call([IPTABLES_BINARY, "-t", table, "-X", name])
 
-            args = [IPTABLES_BINARY,
-                    "-t", "filter", action, "FORWARD",
-                    "-p", protocol,
-                    "-d", domain["private_ip"], "--dport", str(private_port),
-                    "-j", "ACCEPT"]
-            if "interface" in domain:
-                args += ["-o", domain["interface"]]
-            subprocess.call(args)
+def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain):
+    """ Fills the two custom chains with the port mappings. """
+    port_map = domain["port_map"]
+    for protocol in port_map:
+        for ports in port_map[protocol]:
+            # a single integer 80 is equivalent to [80, 80]
+            public_port, private_port = ports if isinstance(ports, list) else [ports, ports]
+            dest = "{0}:{1}".format(private_ip, str(private_port))
+            subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", protocol,
+                "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest])
+            subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", protocol,
+                "-s", private_ip, "-d", private_ip, "--dport", str(public_port), "-j", "MASQUERADE"])
+            interface = ["-o", domain["interface"]] if "interface" in domain else []
+            subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", protocol,
+                "-d", private_ip, "--dport", str(private_port), "-j", "ACCEPT"] + interface)
+
+def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
+    """ inserts (action='-I') or removes (action='-D') the custom chains."""
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "OUTPUT", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "PREROUTING", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-d", private_ip, "-j", snat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "filter", action, "FORWARD", "-d", private_ip, "-j", fwd_chain])
+
+# the snat_chain doesn't work unless we turn off filtering bridged packets
+def disable_bridge_filtering():
+    with open('/proc/sys/net/bridge/bridge-nf-call-iptables', 'w') as brnf:
+        brnf.write('0\n')
+
+
+def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain):
+    """ sets up iptables port-forwarding rules based on the port_map. """
+    disable_bridge_filtering()
+    create_chain("nat", dnat_chain)
+    create_chain("nat", snat_chain)
+    create_chain("filter", fwd_chain)
+    populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain)
+    insert_chains("-I", dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
+
+
+def stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
+    """ tears down the iptables port-forwarding rules. """
+    insert_chains("-D", dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
+    delete_chain("nat", dnat_chain)
+    delete_chain("nat", snat_chain)
+    delete_chain("filter", fwd_chain)
 
 
 if __name__ == "__main__":
@@ -148,7 +173,14 @@ if __name__ == "__main__":
     domain = config().get(vir_domain)
     if domain is None:
         sys.exit(0)
+
+    dnat_chain = "DNAT-{0}".format(vir_domain)
+    snat_chain = "SNAT-{0}".format(vir_domain)
+    fwd_chain = "FWD-{0}".format(vir_domain)
+    public_ip = domain.get("public_ip", host_ip())
+    private_ip = domain["private_ip"]
+
     if action in ["stopped", "reconnect"]:
-        iptables_forward("-D", domain)
+        stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
     if action in ["start", "reconnect"]:
-        iptables_forward("-I", domain)
+        start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain)
