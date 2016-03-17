@@ -146,8 +146,10 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
 
 # the snat_chain doesn't work unless we turn off filtering bridged packets
 def disable_bridge_filtering():
-    with open('/proc/sys/net/bridge/bridge-nf-call-iptables', 'w') as brnf:
-        brnf.write('0\n')
+    proc_file = '/proc/sys/net/bridge/bridge-nf-call-iptables'
+    if(os.path.isfile(proc_file)):
+        with open(proc_file, 'w') as brnf:
+            brnf.write('0\n')
 
 
 def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain):
