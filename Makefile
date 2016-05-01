@@ -7,10 +7,8 @@ install:
 	chmod +x ${LIBVIRT_HOOKS_DIR}/hooks
 	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/qemu
 	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/lxc
-	service libvirtd restart
 
 clean:
 	rm ${LIBVIRT_HOOKS_DIR}/hooks{,.json,.schema.json}
 	rm ${LIBVIRT_HOOKS_DIR}/qemu
 	rm ${LIBVIRT_HOOKS_DIR}/lxc
-	service libvirtd restart
