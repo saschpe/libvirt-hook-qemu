@@ -39,6 +39,30 @@
                     },
                     "additionalProperties": false,
                     "minProperties": 1
+                },
+                "port_range" : {
+                    "title": "Per-protocol port mapping",
+                    "type": "array",
+                    "items": {
+                        "title": "Range port map list",
+                        "type": "object",
+                        "properties": {
+                            "init_port": {
+                                "title": "First port of the range",
+                                "type": "integer" },
+                            "ports_num": {
+                                "title": "Number of ports in the range",
+                                "type": "integer" },
+                            "protocol": { "title": "Per protocol port mapping",
+                                          "type": "string",
+                                          "enum": ["tcp", "udp", "icmp"] }
+                        },
+                        "required": ["init_port", "port_num", "protocol"], 
+                        "additionalItems": false
+                    },
+                    "additionalItems": false,
+                    "minItems": 1,
+                    "uniqueItems": true
                 }
             },
             "required": ["private_ip"],
