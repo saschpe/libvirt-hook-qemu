@@ -17,8 +17,8 @@ import sys
 
 
 CONFIG_PATH = os.getenv('CONFIG_PATH') or os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(CONFIG_PATH, "qemu.json")
-CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(CONFIG_PATH, "qemu.schema.json")
+CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(CONFIG_PATH, "hooks.json")
+CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(CONFIG_PATH, "hooks.schema.json")
 IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output(["which", "iptables"]).strip()
 
 
@@ -136,6 +136,21 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
             interface = ["-o", domain["interface"]] if "interface" in domain else []
             subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", protocol,
                 "-d", private_ip, "--dport", str(private_port), "-j", "ACCEPT"] + interface)
+
+            
+    # Iterate over all port ranges
+    if "port_range" in domain:
+        for port_range in domain["port_range"]:
+            ports_range = (str(port_range["init_port"]) + ":" + 
+                str(port_range["init_port"] + port_range["ports_num"] -1))
+            dest = "{0}:{1}".format(private_ip, ports_range.replace(":", "-", 1))
+            subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", port_range["protocol"],
+                "-d", public_ip, "--dport", ports_range, "-j", "DNAT", "--to", dest])
+            subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", port_range["protocol"],
+                "-s", private_ip, "-d", private_ip, "--dport", ports_range, "-j", "MASQUERADE"])
+            interface = ["-o", domain["interface"]] if "interface" in domain else []
+            subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", port_range["protocol"],
+                "-d", private_ip, "--dport", ports_range, "-j", "ACCEPT"] + interface)
 
 def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
     """ inserts (action='-I') or removes (action='-D') the custom chains."""

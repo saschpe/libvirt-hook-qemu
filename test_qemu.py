@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import imp
 import json
 import os
@@ -6,7 +8,7 @@ import sys
 import textwrap
 import unittest
 
-qemu = imp.load_source('qemu', 'qemu')
+qemu = imp.load_source('hooks', 'hooks')
 
 
 class QemuTestCase(unittest.TestCase):
