@@ -77,7 +77,7 @@ def host_ip():
     specify a different public IP to forward from.
     """
     if not hasattr(host_ip, "_host_ip"):
-        cmd = "ip route | grep default | cut -d' ' -f5"
+        cmd = "ip route | grep default | cut -d' ' -f5 | head -n1"
         default_route_interface = subprocess.check_output(cmd, shell=True).decode().strip()
         cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(default_route_interface)
         host_ip._host_ip = subprocess.check_output(cmd, shell=True).decode().strip()
