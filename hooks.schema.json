@@ -10,6 +10,7 @@
                 "interface": { "type": "string" },
                 "private_ip": { "type": "string" },
                 "public_ip": { "type": "string" },
+                "source_ip": { "type": "string" },
                 "port_map": {
                     "type": "object",
                     "patternProperties": {
