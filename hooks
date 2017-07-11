@@ -121,7 +121,7 @@ def delete_chain(table, name):
     subprocess.call([IPTABLES_BINARY, "-t", table, "-F", name])
     subprocess.call([IPTABLES_BINARY, "-t", table, "-X", name])
 
-def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain):
+def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip):
     """ Fills the two custom chains with the port mappings. """
     port_map = domain["port_map"]
     for protocol in port_map:
@@ -130,7 +130,8 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
             public_port, private_port = ports if isinstance(ports, list) else [ports, ports]
             dest = "{0}:{1}".format(private_ip, str(private_port))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", protocol,
-                "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest])
+                "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest] +
+                (["-s", source_ip] if source_ip else []))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", protocol,
                 "-s", private_ip, "-d", private_ip, "--dport", str(public_port), "-j", "MASQUERADE"])
             interface = ["-o", domain["interface"]] if "interface" in domain else []
@@ -167,13 +168,14 @@ def disable_bridge_filtering():
             brnf.write('0\n')
 
 
-def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain):
+def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip):
     """ sets up iptables port-forwarding rules based on the port_map. """
     disable_bridge_filtering()
     create_chain("nat", dnat_chain)
     create_chain("nat", snat_chain)
     create_chain("filter", fwd_chain)
-    populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain)
+    populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip)
+
     insert_chains("-I", dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
 
 
@@ -196,8 +198,9 @@ if __name__ == "__main__":
     fwd_chain = "FWD-{0}".format(vir_domain)
     public_ip = domain.get("public_ip", host_ip())
     private_ip = domain["private_ip"]
+    source_ip = domain.get("source_ip")
 
     if action in ["stopped", "reconnect"]:
         stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
     if action in ["start", "reconnect"]:
-        start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain)
+        start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip)
