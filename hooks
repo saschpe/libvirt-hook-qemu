@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 
-# python 2.6 support 
+# python 2.6 support
 if "check_output" not in dir( subprocess ):
     def f(*popenargs, **kwargs):
         if 'stdout' in kwargs:
@@ -187,9 +187,12 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
                      "PREROUTING", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING",
+                    "-s", private_ip, "-p", "all", "-j", "SNAT", "--to-source", public_ip])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING",
                      "-s", private_ip, "-d", private_ip, "-j", snat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "filter", action,
                      "FORWARD", "-d", private_ip, "-j", fwd_chain])
+
 
 # the snat_chain doesn't work unless we turn off filtering bridged packets
 
