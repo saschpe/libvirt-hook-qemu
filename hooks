@@ -157,6 +157,8 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
     """ inserts (action='-I') or removes (action='-D') the custom chains."""
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "OUTPUT", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "PREROUTING", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-p", "all", 
+                    "-j", "SNAT", "--to-source", public_ip])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-d", private_ip, "-j", snat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "filter", action, "FORWARD", "-d", private_ip, "-j", fwd_chain])
 
