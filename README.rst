@@ -27,6 +27,14 @@ configuration files won't be touched. The files can be removed again with:
 Testing
 -------
 
+To run unit tests use the *test* target of the :file:`Makefile`:
+
+.. code-block:: bash
+
+    $ make test
+
+Or use the Python unittest module to discover tests directly:
+
 .. code-block:: python
 
     python -m unittest discover
