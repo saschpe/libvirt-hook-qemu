@@ -121,7 +121,7 @@ def delete_chain(table, name):
     subprocess.call([IPTABLES_BINARY, "-t", table, "-F", name])
     subprocess.call([IPTABLES_BINARY, "-t", table, "-X", name])
 
-def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip):
+def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip=None):
     """ Fills the two custom chains with the port mappings. """
     port_map = domain["port_map"]
     for protocol in port_map:
@@ -168,7 +168,7 @@ def disable_bridge_filtering():
             brnf.write('0\n')
 
 
-def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip):
+def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip=None):
     """ sets up iptables port-forwarding rules based on the port_map. """
     disable_bridge_filtering()
     create_chain("nat", dnat_chain)
