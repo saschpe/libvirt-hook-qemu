@@ -16,10 +16,14 @@ import subprocess
 import sys
 
 
-CONFIG_PATH = os.getenv('CONFIG_PATH') or os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(CONFIG_PATH, "hooks.json")
-CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(CONFIG_PATH, "hooks.schema.json")
-IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output(["which", "iptables"]).strip()
+CONFIG_PATH = os.getenv('CONFIG_PATH') or os.path.dirname(
+    os.path.abspath(__file__))
+CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(
+    CONFIG_PATH, "hooks.json")
+CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(
+    CONFIG_PATH, "hooks.schema.json")
+IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output([
+    "which", "iptables"]).strip()
 
 
 # Allow comments in json, copied from https://github.com/getify/JSON.minify
@@ -78,9 +82,12 @@ def host_ip():
     """
     if not hasattr(host_ip, "_host_ip"):
         cmd = "ip route | grep default | cut -d' ' -f5 | head -n1"
-        default_route_interface = subprocess.check_output(cmd, shell=True).decode().strip()
-        cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(default_route_interface)
-        host_ip._host_ip = subprocess.check_output(cmd, shell=True).decode().strip()
+        default_route_interface = subprocess.check_output(
+            cmd, shell=True).decode().strip()
+        cmd = "ip addr show {0} | grep -E 'inet .*{0}' | cut -d' ' -f6 | cut -d'/' -f1".format(
+            default_route_interface)
+        host_ip._host_ip = subprocess.check_output(
+            cmd, shell=True).decode().strip()
     return host_ip._host_ip.split('\n')[0]
 
 
@@ -111,15 +118,16 @@ def config(validate=True):
     return config._conf
 
 
-
 def create_chain(table, name):
     """ Creates the named chain. """
     subprocess.call([IPTABLES_BINARY, "-t", table, "-N", name])
+
 
 def delete_chain(table, name):
     """ Flushes and deletes the named chain. """
     subprocess.call([IPTABLES_BINARY, "-t", table, "-F", name])
     subprocess.call([IPTABLES_BINARY, "-t", table, "-X", name])
+
 
 def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip=None):
     """ Fills the two custom chains with the port mappings. """
@@ -127,40 +135,50 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
     for protocol in port_map:
         for ports in port_map[protocol]:
             # a single integer 80 is equivalent to [80, 80]
-            public_port, private_port = ports if isinstance(ports, list) else [ports, ports]
+            public_port, private_port = ports if isinstance(ports, list) else [
+                ports, ports]
             dest = "{0}:{1}".format(private_ip, str(private_port))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", protocol,
-                "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest] +
-                (["-s", source_ip] if source_ip else []))
+                             "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest] +
+                            (["-s", source_ip] if source_ip else []))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", protocol,
-                "-s", private_ip, "-d", private_ip, "--dport", str(public_port), "-j", "MASQUERADE"])
-            interface = ["-o", domain["interface"]] if "interface" in domain else []
+                             "-s", private_ip, "-d", private_ip, "--dport", str(public_port), "-j", "MASQUERADE"])
+            interface = ["-o", domain["interface"]
+                         ] if "interface" in domain else []
             subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", protocol,
-                "-d", private_ip, "--dport", str(private_port), "-j", "ACCEPT"] + interface)
+                             "-d", private_ip, "--dport", str(private_port), "-j", "ACCEPT"] + interface)
 
-            
     # Iterate over all port ranges
     if "port_range" in domain:
         for port_range in domain["port_range"]:
-            ports_range = (str(port_range["init_port"]) + ":" + 
-                str(port_range["init_port"] + port_range["ports_num"] -1))
-            dest = "{0}:{1}".format(private_ip, ports_range.replace(":", "-", 1))
+            ports_range = (str(port_range["init_port"]) + ":" +
+                           str(port_range["init_port"] + port_range["ports_num"] - 1))
+            dest = "{0}:{1}".format(
+                private_ip, ports_range.replace(":", "-", 1))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", port_range["protocol"],
-                "-d", public_ip, "--dport", ports_range, "-j", "DNAT", "--to", dest])
+                             "-d", public_ip, "--dport", ports_range, "-j", "DNAT", "--to", dest])
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", port_range["protocol"],
-                "-s", private_ip, "-d", private_ip, "--dport", ports_range, "-j", "MASQUERADE"])
-            interface = ["-o", domain["interface"]] if "interface" in domain else []
+                             "-s", private_ip, "-d", private_ip, "--dport", ports_range, "-j", "MASQUERADE"])
+            interface = ["-o", domain["interface"]
+                         ] if "interface" in domain else []
             subprocess.call([IPTABLES_BINARY, "-t", "filter", "-A", fwd_chain, "-p", port_range["protocol"],
-                "-d", private_ip, "--dport", ports_range, "-j", "ACCEPT"] + interface)
+                             "-d", private_ip, "--dport", ports_range, "-j", "ACCEPT"] + interface)
+
 
 def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
     """ inserts (action='-I') or removes (action='-D') the custom chains."""
-    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "OUTPUT", "-d", public_ip, "-j", dnat_chain])
-    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "PREROUTING", "-d", public_ip, "-j", dnat_chain])
-    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-d", private_ip, "-j", snat_chain])
-    subprocess.call([IPTABLES_BINARY, "-t", "filter", action, "FORWARD", "-d", private_ip, "-j", fwd_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
+                     "OUTPUT", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
+                     "PREROUTING", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING",
+                     "-s", private_ip, "-d", private_ip, "-j", snat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "filter", action,
+                     "FORWARD", "-d", private_ip, "-j", fwd_chain])
 
 # the snat_chain doesn't work unless we turn off filtering bridged packets
+
+
 def disable_bridge_filtering():
     proc_file = '/proc/sys/net/bridge/bridge-nf-call-iptables'
     if(os.path.isfile(proc_file)):
@@ -174,14 +192,17 @@ def start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, d
     create_chain("nat", dnat_chain)
     create_chain("nat", snat_chain)
     create_chain("filter", fwd_chain)
-    populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip)
+    populate_chains(dnat_chain, snat_chain, fwd_chain,
+                    public_ip, private_ip, domain, source_ip)
 
-    insert_chains("-I", dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
+    insert_chains("-I", dnat_chain, snat_chain,
+                  fwd_chain, public_ip, private_ip)
 
 
 def stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
     """ tears down the iptables port-forwarding rules. """
-    insert_chains("-D", dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
+    insert_chains("-D", dnat_chain, snat_chain,
+                  fwd_chain, public_ip, private_ip)
     delete_chain("nat", dnat_chain)
     delete_chain("nat", snat_chain)
     delete_chain("filter", fwd_chain)
@@ -201,6 +222,8 @@ if __name__ == "__main__":
     source_ip = domain.get("source_ip")
 
     if action in ["stopped", "reconnect"]:
-        stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip)
+        stop_forwarding(dnat_chain, snat_chain,
+                        fwd_chain, public_ip, private_ip)
     if action in ["start", "reconnect"]:
-        start_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip)
+        start_forwarding(dnat_chain, snat_chain, fwd_chain,
+                         public_ip, private_ip, domain, source_ip)

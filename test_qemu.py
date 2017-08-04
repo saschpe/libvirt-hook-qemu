@@ -12,6 +12,7 @@ qemu = imp.load_source('hooks', 'hooks')
 
 
 class QemuTestCase(unittest.TestCase):
+
     def test_host_ip(self):
         host_ip = qemu.host_ip()
         try:
@@ -77,14 +78,16 @@ class QemuTestCase(unittest.TestCase):
 
         # stub out the disable_bridge_filtering call
         self.bridge_nf = False
+
         def disable_bridge_filtering():
             self.bridge_nf = True
         self.old_bridge_filtering = qemu.disable_bridge_filtering
         qemu.disable_bridge_filtering = disable_bridge_filtering
 
         def test_func():
-            domain = { "port_map": port_map, "interface": "virbr0" }
-            qemu.start_forwarding("DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1", domain)
+            domain = {"port_map": port_map, "interface": "virbr0"}
+            qemu.start_forwarding("DNAT-test", "SNAT-test",
+                                  "FWD-test", "192.168.1.1", "127.0.0.1", domain)
 
         output = self.capture_output(test_func)
         self.maxDiff = None
@@ -108,7 +111,8 @@ class QemuTestCase(unittest.TestCase):
         """)
 
         def test_func():
-            qemu.stop_forwarding("DNAT-test", "SNAT-test", "FWD-test", "192.168.1.1", "127.0.0.1")
+            qemu.stop_forwarding("DNAT-test", "SNAT-test",
+                                 "FWD-test", "192.168.1.1", "127.0.0.1")
 
         output = self.capture_output(test_func)
         self.maxDiff = None
