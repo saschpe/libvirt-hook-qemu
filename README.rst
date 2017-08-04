@@ -21,7 +21,7 @@ configuration files won't be touched. The files can be removed again with:
 
 .. code-block:: bash
 
-    $ sudo make clean
+    $ sudo make uninstall
 
 
 Testing

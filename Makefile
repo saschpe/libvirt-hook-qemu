@@ -11,7 +11,12 @@ install:
 test:
 	python -m unittest discover
 
-clean:
+uninstall:
 	rm ${LIBVIRT_HOOKS_DIR}/hooks{,.json,.schema.json}
 	rm ${LIBVIRT_HOOKS_DIR}/qemu
 	rm ${LIBVIRT_HOOKS_DIR}/lxc
+
+clean:
+	@rm *.pyc ||:
+	@rm -r __pycache__/ ||:
+	@rm hooksc ||:
