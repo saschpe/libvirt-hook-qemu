@@ -8,6 +8,9 @@ install:
 	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/qemu
 	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/lxc
 
+test:
+	python -m unittest discover
+
 clean:
 	rm ${LIBVIRT_HOOKS_DIR}/hooks{,.json,.schema.json}
 	rm ${LIBVIRT_HOOKS_DIR}/qemu
