@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/saschpe/libvirt-hook-qemu.svg?branch=master
+    :target: https://travis-ci.org/saschpe/libvirt-hook-qemu
+
 Libvirt port-forwarding hook
 ============================
 
