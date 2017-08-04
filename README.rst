@@ -12,7 +12,7 @@ Installation
 ------------
 
 To install the hook script and it's configuration files, simply use the
-:file:`Makefile`:
+Makefile_:
 
 .. code-block:: bash
 
@@ -30,7 +30,7 @@ configuration files won't be touched. The files can be removed again with:
 Testing
 -------
 
-To run unit tests use the *test* target of the :file:`Makefile`:
+To run unit tests use the ``test`` target of the Makefile_:
 
 .. code-block:: bash
 
@@ -65,11 +65,13 @@ to ensure the reply returns over the bridge.
 To see a real-world example, the ``test_setup`` function in test_qemu.py_
 demonstrates a simple JSON configuration and the iptables rules that it produces.
 
-.. _test_qemu.py: test_qemu.py
-
 
 Authors
 -------
 
 - Sascha Peilicke
 - Scott Bronson
+
+
+.. _Makefile: Makefile
+.. _test_qemu.py: test_qemu.py
