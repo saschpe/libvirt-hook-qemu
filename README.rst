@@ -54,7 +54,7 @@ implemented, the DNAT must occur in two chains: nat:PREROUTING for packets
 arriving on the public interface, and nat:OUTPUT for packets originating on
 the host.
 
-We also add rules to the FORWARD chain to ensure the repsonses return.
+We also add rules to the FORWARD chain to ensure the responses return.
 
 Finally, packets originating on the guest and sent to the host's public IP
 address need special handling.  They are DNATed back to the guest like all
