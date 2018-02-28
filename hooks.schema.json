@@ -58,7 +58,7 @@
                                           "type": "string",
                                           "enum": ["tcp", "udp", "icmp"] }
                         },
-                        "required": ["init_port", "port_num", "protocol"], 
+                        "required": ["init_port", "ports_num", "protocol"], 
                         "additionalItems": false
                     },
                     "additionalItems": false,
