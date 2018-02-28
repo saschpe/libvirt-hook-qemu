@@ -5,8 +5,8 @@ install:
 	cp hooks hooks.schema.json ${LIBVIRT_HOOKS_DIR}
 	if [ ! -f ${LIBVIRT_HOOKS_DIR}/hooks.json ] ; then cp hooks.json ${LIBVIRT_HOOKS_DIR} ; fi
 	chmod +x ${LIBVIRT_HOOKS_DIR}/hooks
-	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/qemu
-	ln -s ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/lxc
+	ln -sf ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/qemu
+	ln -sf ${LIBVIRT_HOOKS_DIR}/hooks ${LIBVIRT_HOOKS_DIR}/lxc
 
 test:
 	python -m unittest discover
