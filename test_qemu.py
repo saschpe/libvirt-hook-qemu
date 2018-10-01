@@ -72,6 +72,7 @@ class QemuTestCase(unittest.TestCase):
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT -o virbr0
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -I PREROUTING -d 192.168.1.1 -j DNAT-test
+            -t nat -I POSTROUTING -s 127.0.0.1 -p all -j SNAT --to-source 192.168.1.1
             -t nat -I POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
             -t filter -I FORWARD -d 127.0.0.1 -j FWD-test
         """)
@@ -100,6 +101,7 @@ class QemuTestCase(unittest.TestCase):
         expected_output = self.dedent("""
             -t nat -D OUTPUT -d 192.168.1.1 -j DNAT-test
             -t nat -D PREROUTING -d 192.168.1.1 -j DNAT-test
+            -t nat -D POSTROUTING -s 127.0.0.1 -p all -j SNAT --to-source 192.168.1.1
             -t nat -D POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
             -t filter -D FORWARD -d 127.0.0.1 -j FWD-test
             -t nat -F DNAT-test
