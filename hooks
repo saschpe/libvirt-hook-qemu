@@ -182,6 +182,7 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
 
 def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
     """ inserts (action='-I') or removes (action='-D') the custom chains."""
+<<<<<<< HEAD
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
                      "OUTPUT", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
@@ -193,6 +194,14 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
     subprocess.call([IPTABLES_BINARY, "-t", "filter", action,
                      "FORWARD", "-d", private_ip, "-j", fwd_chain])
 
+=======
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "OUTPUT", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "PREROUTING", "-d", public_ip, "-j", dnat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-p", "all", 
+                    "-j", "SNAT", "--to-source", public_ip])
+    subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING", "-s", private_ip, "-d", private_ip, "-j", snat_chain])
+    subprocess.call([IPTABLES_BINARY, "-t", "filter", action, "FORWARD", "-d", private_ip, "-j", fwd_chain])
+>>>>>>> 749a4f32020be34bd608c50dbfd922bbf21d87cd
 
 # the snat_chain doesn't work unless we turn off filtering bridged packets
 
