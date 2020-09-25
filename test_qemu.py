@@ -62,12 +62,15 @@ class QemuTestCase(unittest.TestCase):
             -t nat -N SNAT-test
             -t filter -N FWD-test
             -t nat -A DNAT-test -p udp -d 192.168.1.1 --dport 53 -j DNAT --to 127.0.0.1:53
+            -t nat -A SNAT-test -p udp -s 127.0.0.1 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p udp -s 127.0.0.1 -d 127.0.0.1 --dport 53 -j MASQUERADE
             -t filter -A FWD-test -p udp -d 127.0.0.1 --dport 53 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 80 -j DNAT --to 127.0.0.1:8080
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 80 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 8080 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 443 -j DNAT --to 127.0.0.1:443
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 443 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT -o virbr0
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
