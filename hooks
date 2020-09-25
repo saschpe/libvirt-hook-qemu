@@ -203,6 +203,7 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
                      "FORWARD", "-d", private_ip, "-j", fwd_chain])
 
 # the snat_chain doesn't work unless we turn off filtering bridged packets
+# https://wiki.libvirt.org/page/Net.bridge.bridge-nf-call_and_sysctl.conf
 
 
 def disable_bridge_filtering():
