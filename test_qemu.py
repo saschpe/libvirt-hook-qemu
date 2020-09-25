@@ -1,7 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import imp
-import json
 import os
 import socket
 import sys
@@ -37,13 +36,15 @@ class QemuTestCase(unittest.TestCase):
             qemu.IPTABLES_BINARY = '/bin/echo'
             to = open(outfile, "w")
             os.dup2(to.fileno(), sys.stdout.fileno())
+            to.close()
             func()
         finally:
             sys.stdout.flush()
             os.dup2(orig_out, sys.stdout.fileno())
             qemu.IPTABLES_BINARY = orig_binary
 
-        output = open(outfile).read()
+        with open(outfile, 'r') as f:
+            output = f.read()
         os.remove(outfile)
         return output
 
