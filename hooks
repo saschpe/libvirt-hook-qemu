@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 """Libvirt port-forwarding hook.
 
@@ -15,8 +15,7 @@ import re
 import subprocess
 import sys
 
-# python 2.6 support 
-if "check_output" not in dir( subprocess ):
+if "check_output" not in dir(subprocess):
     def f(*popenargs, **kwargs):
         if 'stdout' in kwargs:
             raise ValueError('stdout argument not allowed, it will be overridden.')
