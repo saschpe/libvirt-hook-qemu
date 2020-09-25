@@ -197,6 +197,9 @@ def insert_chains(action, dnat_chain, snat_chain, fwd_chain, public_ip, private_
                      "OUTPUT", "-d", public_ip, "-j", dnat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action,
                      "PREROUTING", "-d", public_ip, "-j", dnat_chain])
+    # TODO: Find solution for connections from different private_ip to public_ip
+    # maybe use private_ip_net as source instead
+    # WORKAROUND: remove `"-s", private_ip, `
     subprocess.call([IPTABLES_BINARY, "-t", "nat", action, "POSTROUTING",
                      "-s", private_ip, "-d", private_ip, "-j", snat_chain])
     subprocess.call([IPTABLES_BINARY, "-t", "filter", action,
