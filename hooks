@@ -168,7 +168,7 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
                              "-d", public_ip, "--dport", str(public_port), "-j", "DNAT", "--to", dest] +
                             (["-s", source_ip] if source_ip else []))
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", protocol,
-                             "-s", private_ip, "-j", "SNAT", "--to-source", public_ip])
+                             "-s", private_ip, "--dport", str(private_port), "-j", "SNAT", "--to-source", public_ip])
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", protocol,
                              "-s", private_ip, "-d", private_ip, "--dport", str(public_port), "-j", "MASQUERADE"])
             interface = ["-o", domain["interface"]
@@ -186,7 +186,7 @@ def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, do
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", dnat_chain, "-p", port_range["protocol"],
                              "-d", public_ip, "--dport", ports_range, "-j", "DNAT", "--to", dest])
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", port_range["protocol"],
-                             "-s", private_ip, "-j", "SNAT", "--to-source", public_ip])
+                             "-s", private_ip, "--dport", str(private_port), "-j", "SNAT", "--to-source", public_ip])
             subprocess.call([IPTABLES_BINARY, "-t", "nat", "-A", snat_chain, "-p", port_range["protocol"],
                              "-s", private_ip, "-d", private_ip, "--dport", ports_range, "-j", "MASQUERADE"])
             interface = ["-o", domain["interface"]
