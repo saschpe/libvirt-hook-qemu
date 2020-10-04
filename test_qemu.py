@@ -1,7 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import imp
-import json
 import os
 import socket
 import sys
@@ -37,13 +36,15 @@ class QemuTestCase(unittest.TestCase):
             qemu.IPTABLES_BINARY = '/bin/echo'
             to = open(outfile, "w")
             os.dup2(to.fileno(), sys.stdout.fileno())
+            to.close()
             func()
         finally:
             sys.stdout.flush()
             os.dup2(orig_out, sys.stdout.fileno())
             qemu.IPTABLES_BINARY = orig_binary
 
-        output = open(outfile).read()
+        with open(outfile, 'r') as f:
+            output = f.read()
         os.remove(outfile)
         return output
 
@@ -62,12 +63,15 @@ class QemuTestCase(unittest.TestCase):
             -t nat -N SNAT-test
             -t filter -N FWD-test
             -t nat -A DNAT-test -p udp -d 192.168.1.1 --dport 53 -j DNAT --to 127.0.0.1:53
+            -t nat -A SNAT-test -p udp -s 127.0.0.1 --dport 53 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p udp -s 127.0.0.1 -d 127.0.0.1 --dport 53 -j MASQUERADE
             -t filter -A FWD-test -p udp -d 127.0.0.1 --dport 53 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 80 -j DNAT --to 127.0.0.1:8080
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 --dport 8080 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 80 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 8080 -j ACCEPT -o virbr0
             -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 443 -j DNAT --to 127.0.0.1:443
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 --dport 443 -j SNAT --to-source 192.168.1.1
             -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 443 -j MASQUERADE
             -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 443 -j ACCEPT -o virbr0
             -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
