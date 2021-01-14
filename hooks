@@ -8,7 +8,7 @@ networking.
 __author__ = "Sascha Peilicke <saschpe@gmx.de>"
 __version__ = "0.2.0"
 
-
+import math
 import os
 import json
 import re
