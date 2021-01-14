@@ -8,7 +8,6 @@ networking.
 __author__ = "Sascha Peilicke <saschpe@gmx.de>"
 __version__ = "0.2.0"
 
-import math
 import os
 import json
 import re
@@ -36,8 +35,8 @@ CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(
     CONFIG_PATH, "hooks.json")
 CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(
     CONFIG_PATH, "hooks.schema.json")
-IPTABLES_BINARY = "/bin/echo"# os.getenv('IPTABLES_BINARY') or subprocess.check_output([
-#    "which", "iptables"]).strip()
+IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output([
+    "which", "iptables"]).strip()
 
 
 # Allow comments in json, copied from https://github.com/getify/JSON.minify
