@@ -245,9 +245,9 @@ def stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
 def substitute_domain_name(domain_name, index):
     # handle the 28 char limit of iptables
     # we need to take the possible 5 chars of "DNAT-" and
-    # each char of the index string into account
-    return domain_name[0:28 - (5 + math.ceil(math.log10(index + 1))]
-            + str(index)
+    # each char of the index string plus the separator into account
+    return domain_name[0:28 - (5 + math.ceil(math.log10(index + 1) + 1)]
+            + "-" str(index)
 
 
 def handle_domain(action, domain, vir_domain):
