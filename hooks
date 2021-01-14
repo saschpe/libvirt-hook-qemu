@@ -36,8 +36,8 @@ CONFIG_FILENAME = os.getenv('CONFIG_FILENAME') or os.path.join(
     CONFIG_PATH, "hooks.json")
 CONFIG_SCHEMA_FILENAME = os.getenv('CONFIG_SCHEMA_FILENAME') or os.path.join(
     CONFIG_PATH, "hooks.schema.json")
-IPTABLES_BINARY = os.getenv('IPTABLES_BINARY') or subprocess.check_output([
-    "which", "iptables"]).strip()
+IPTABLES_BINARY = "/bin/echo"# os.getenv('IPTABLES_BINARY') or subprocess.check_output([
+#    "which", "iptables"]).strip()
 
 
 # Allow comments in json, copied from https://github.com/getify/JSON.minify
@@ -242,12 +242,11 @@ def stop_forwarding(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip):
     delete_chain("filter", fwd_chain)
 
 
-def substitute_domain_name(domain_name, index):
+def substitute_domain_name(domain_name, index_str):
     # handle the 28 char limit of iptables
     # we need to take the possible 5 chars of "DNAT-" and
     # each char of the index string plus the separator into account
-    return domain_name[0:28 - (5 + math.ceil(math.log10(index + 1)) + 1)]
-            + "-" + str(index)
+    return domain_name[0:28 - (5 + len(index_str) + 1)] + "-" + index_str
 
 
 def handle_domain(action, domain, vir_domain):
@@ -277,5 +276,5 @@ if __name__ == "__main__":
     else:
         i = 0
         for actual_domain in domain:
-            handle_domain(action, actual_domain, substitute_domain_name(vir_domain, i))
+            handle_domain(action, actual_domain, substitute_domain_name(vir_domain, str(i)))
             i += 1
