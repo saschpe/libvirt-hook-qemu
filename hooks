@@ -264,7 +264,7 @@ if __name__ == "__main__":
     if domain is None:
         sys.exit(0)
 
-    if isinstance(domain, list):
+    if not isinstance(domain, list):
         handle_domain(action, domain, vir_domain)
     else:
         i = 0
