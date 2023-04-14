@@ -1,73 +1,197 @@
 {
     "$schema": "http://json-schema.org/schema#",
     "title": "Libvirt port-forwarding hook configuration schema",
-    "type" : "object",
+    "type": "object",
     "patternProperties": {
         "^[A-Za-z_\\-]": {
-            "title": "Libvirt domain name",
-            "type": "object",
-            "properties": {
-                "interface": { "type": "string" },
-                "private_ip": { "type": "string" },
-                "public_ip": { "type": "string" },
-                "source_ip": { "type": "string" },
-                "port_map": {
+            "oneOf": [
+                {
+                    "title": "Libvirt domain name",
                     "type": "object",
-                    "patternProperties": {
-                        "^tcp|udp|icmp": {
+                    "properties": {
+                        "interface": {
+                            "type": "string"
+                        },
+                        "private_ip": {
+                            "type": "string"
+                        },
+                        "public_ip": {
+                            "type": "string"
+                        },
+                        "source_ip": {
+                            "type": "string"
+                        },
+                        "port_map": {
+                            "type": "object",
+                            "patternProperties": {
+                                "^tcp|udp|icmp": {
+                                    "title": "Per-protocol port mapping",
+                                    "type": "array",
+                                    "items": {
+                                        "oneOf": [
+                                            {
+                                                "title": "public and private port",
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "title": "Public / private port map list",
+                                                "type": "array",
+                                                "items": {
+                                                    "title": "Public / private port pair",
+                                                    "type": "integer"
+                                                },
+                                                "minItems": 2,
+                                                "maxItems": 2,
+                                                "additionalItems": false
+                                            }
+                                        ]
+                                    },
+                                    "additionalItems": false,
+                                    "minItems": 1,
+                                    "uniqueItems": true
+                                }
+                            },
+                            "additionalProperties": false,
+                            "minProperties": 1
+                        },
+                        "port_range": {
                             "title": "Per-protocol port mapping",
                             "type": "array",
                             "items": {
-                                "oneOf": [{
-                                    "title": "public and private port",
-                                    "type": "integer"
-                                  }, {
-                                    "title": "Public / private port map list",
-                                    "type": "array",
-                                    "items": {
-                                        "title": "Public / private port pair",
+                                "title": "Range port map list",
+                                "type": "object",
+                                "properties": {
+                                    "init_port": {
+                                        "title": "First port of the range",
                                         "type": "integer"
                                     },
-                                    "minItems": 2,
-                                    "maxItems": 2,
-                                    "additionalItems": false
-                                }]
+                                    "ports_num": {
+                                        "title": "Number of ports in the range",
+                                        "type": "integer"
+                                    },
+                                    "protocol": {
+                                        "title": "Per protocol port mapping",
+                                        "type": "string",
+                                        "enum": [
+                                            "tcp",
+                                            "udp",
+                                            "icmp"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "init_port",
+                                    "ports_num",
+                                    "protocol"
+                                ],
+                                "additionalItems": false
                             },
                             "additionalItems": false,
                             "minItems": 1,
                             "uniqueItems": true
                         }
                     },
-                    "additionalProperties": false,
-                    "minProperties": 1
+                    "required": [
+                        "private_ip"
+                    ],
+                    "additionalProperties": false
                 },
-                "port_range" : {
-                    "title": "Per-protocol port mapping",
+                {
+                    "title": "Array of domains",
                     "type": "array",
                     "items": {
-                        "title": "Range port map list",
+                        "title": "Libvirt domain name",
                         "type": "object",
                         "properties": {
-                            "init_port": {
-                                "title": "First port of the range",
-                                "type": "integer" },
-                            "ports_num": {
-                                "title": "Number of ports in the range",
-                                "type": "integer" },
-                            "protocol": { "title": "Per protocol port mapping",
-                                          "type": "string",
-                                          "enum": ["tcp", "udp", "icmp"] }
+                            "interface": {
+                                "type": "string"
+                            },
+                            "private_ip": {
+                                "type": "string"
+                            },
+                            "public_ip": {
+                                "type": "string"
+                            },
+                            "source_ip": {
+                                "type": "string"
+                            },
+                            "port_map": {
+                                "type": "object",
+                                "patternProperties": {
+                                    "^tcp|udp|icmp": {
+                                        "title": "Per-protocol port mapping",
+                                        "type": "array",
+                                        "items": {
+                                            "oneOf": [
+                                                {
+                                                    "title": "public and private port",
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "title": "Public / private port map list",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "title": "Public / private port pair",
+                                                        "type": "integer"
+                                                    },
+                                                    "minItems": 2,
+                                                    "maxItems": 2,
+                                                    "additionalItems": false
+                                                }
+                                            ]
+                                        },
+                                        "additionalItems": false,
+                                        "minItems": 1,
+                                        "uniqueItems": true
+                                    }
+                                },
+                                "additionalProperties": false,
+                                "minProperties": 1
+                            },
+                            "port_range": {
+                                "title": "Per-protocol port mapping",
+                                "type": "array",
+                                "items": {
+                                    "title": "Range port map list",
+                                    "type": "object",
+                                    "properties": {
+                                        "init_port": {
+                                            "title": "First port of the range",
+                                            "type": "integer"
+                                        },
+                                        "ports_num": {
+                                            "title": "Number of ports in the range",
+                                            "type": "integer"
+                                        },
+                                        "protocol": {
+                                            "title": "Per protocol port mapping",
+                                            "type": "string",
+                                            "enum": [
+                                                "tcp",
+                                                "udp",
+                                                "icmp"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "init_port",
+                                        "ports_num",
+                                        "protocol"
+                                    ],
+                                    "additionalItems": false
+                                },
+                                "additionalItems": false,
+                                "minItems": 1,
+                                "uniqueItems": true
+                            }
                         },
-                        "required": ["init_port", "ports_num", "protocol"], 
-                        "additionalItems": false
-                    },
-                    "additionalItems": false,
-                    "minItems": 1,
-                    "uniqueItems": true
+                        "required": [
+                            "private_ip"
+                        ],
+                        "additionalProperties": false
+                    }
                 }
-            },
-            "required": ["private_ip"],
-            "additionalProperties": false
+            ]
         }
     },
     "minProperties": 1
