@@ -1,20 +1,60 @@
 {
-    "cloud-admin": {
-        "interface": "virbr1",            // you can use comments
-        "private_ip": "192.168.124.10",   /* both styles */
-        // source_ip is not the hosts public_ip
-        // it is a remote IP which gets permission to access this port
+    // Note: comments in two styles are supported
+    /* Note: comments in two styles are supported */
+
+    // Name of the guest VM
+    "example-guest-vm-name-please-change": {
+
+        // Name of the network interface the guest is using
+        "interface": "virbr0",
+
+        // IP address of the guest
+        "private_ip": "192.168.124.10",
+
+        // Remote IP which gets permission to access the ports
+        // This line can be omitted, allowing any remote IP access
         "source_ip": "8.8.8.8",
+
+        /*
+        When opening ports, you have two choices:
+        1. Opening single ports one by one using "port_map"
+           This allows you to map an external port x to an internal port y if you wish
+
+        2. Opening a range of ports altogether using "port_range"
+
+        You can use one or both of these, as the examples below illustrate.
+        */
+
         "port_map": {
-            "tcp": [[1100, 3000], 443]
-        }
+            // Protocol can be one of tcp, udp or icmp
+            "tcp": [
+                [1100, 3000],   // External port 1100 will map to guest port 3000
+                443,            // External port 443 will map to guest port 443
+                3389
+            ],
+            "udp": [
+                27016
+            ]
+        },
+
+        "port_range": [
+            // The example below opens ports 8888-8890 inclusive over TCP
+            {
+                // First port in range
+                "init_port": 8888,
+
+                // Number of ports to open
+                "ports_num": 2,
+
+                // Protocol to open ports over
+                "protocol": "tcp"
+            },
+            // UDP 30000-30100
+            {
+                "init_port": 30000,
+                "ports_num": 100,
+                "protocol": "udp"
+            }
+        ]
     },
-    "cloud-node1": {
-        "private_ip": "192.168.126.2",
-        "port_map": {
-                // [[private_ip, public_ip]]
-            "tcp": [[1101, 80],
-                    [1102, 443]]
-        }
-    }
 }

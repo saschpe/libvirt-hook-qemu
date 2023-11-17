@@ -18,14 +18,22 @@ Makefile_:
 
     $ sudo make install
 
-Afterwards customize */etc/libvirt/hooks/qemu.json* to your needs.
-This Makefile target can be invoked multiple times, already installed
+Restart your libvirt daemon after installing:
+
+.. code-block:: bash
+
+    $ sudo service libvirtd restart
+
+Afterwards, customize ``/etc/libvirt/hooks/hooks.json`` to your needs.
+The file includes documentation on how to set up the port forwards, but
+changes to the file will be reflected only when the guest VM stops and starts again.
+
+The Makefile target can be invoked multiple times, already installed
 configuration files won't be touched. The files can be removed again with:
 
 .. code-block:: bash
 
     $ sudo make uninstall
-
 
 Testing
 -------
