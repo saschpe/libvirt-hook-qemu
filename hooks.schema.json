@@ -15,10 +15,19 @@
                         "private_ip": {
                             "type": "string"
                         },
+                        "private_ipv6": {
+                            "type": "string"
+                        },
                         "public_ip": {
                             "type": "string"
                         },
+                        "public_ipv6": {
+                            "type": "string"
+                        },
                         "source_ip": {
+                            "type": "string"
+                        },
+                        "source_ipv6": {
                             "type": "string"
                         },
                         "port_map": {
@@ -109,10 +118,19 @@
                             "private_ip": {
                                 "type": "string"
                             },
+                            "private_ipv6": {
+                                "type": "string"
+                            },
                             "public_ip": {
                                 "type": "string"
                             },
+                            "public_ipv6": {
+                                "type": "string"
+                            },
                             "source_ip": {
+                                "type": "string"
+                            },
+                            "source_ipv6": {
                                 "type": "string"
                             },
                             "port_map": {
