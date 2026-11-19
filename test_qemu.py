@@ -100,6 +100,38 @@ class QemuTestCase(unittest.TestCase):
 
         qemu.disable_bridge_filtering = self.old_bridge_filtering
 
+    def test_setup_port_range_only(self):
+        # port_map is optional, a domain can use only port_range
+        expected_output = self.dedent("""
+            -t nat -N DNAT-test
+            -t nat -N SNAT-test
+            -t filter -N FWD-test
+            -t nat -A DNAT-test -p tcp -d 192.168.1.1 --dport 6000:6009 -j DNAT --to 127.0.0.1:6000-6009
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 --dport 6000:6009 -j SNAT --to-source 192.168.1.1
+            -t nat -A SNAT-test -p tcp -s 127.0.0.1 -d 127.0.0.1 --dport 6000:6009 -j MASQUERADE
+            -t filter -A FWD-test -p tcp -d 127.0.0.1 --dport 6000:6009 -j ACCEPT
+            -t nat -I OUTPUT -d 192.168.1.1 -j DNAT-test
+            -t nat -I PREROUTING -d 192.168.1.1 -j DNAT-test
+            -t nat -I POSTROUTING -s 127.0.0.1 -d 127.0.0.1 -j SNAT-test
+            -t filter -I FORWARD -d 127.0.0.1 -j FWD-test
+        """)
+
+        old_bridge_filtering = qemu.disable_bridge_filtering
+        qemu.disable_bridge_filtering = lambda: None
+
+        def test_func():
+            domain = {"port_range": [
+                {"init_port": 6000, "ports_num": 10, "protocol": "tcp"}]}
+            qemu.start_forwarding("DNAT-test", "SNAT-test",
+                                  "FWD-test", "192.168.1.1", "127.0.0.1", domain)
+
+        try:
+            output = self.capture_output(test_func)
+        finally:
+            qemu.disable_bridge_filtering = old_bridge_filtering
+        self.maxDiff = None
+        self.assertMultiLineEqual(output, expected_output)
+
     def test_teardown(self):
         expected_output = self.dedent("""
             -t nat -D OUTPUT -d 192.168.1.1 -j DNAT-test

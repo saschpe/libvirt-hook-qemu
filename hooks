@@ -157,7 +157,7 @@ def delete_chain(table, name):
 
 def populate_chains(dnat_chain, snat_chain, fwd_chain, public_ip, private_ip, domain, source_ip=None):
     """ Fills the two custom chains with the port mappings. """
-    port_map = domain["port_map"]
+    port_map = domain.get("port_map", {})
     for protocol in port_map:
         for ports in port_map[protocol]:
             # a single integer 80 is equivalent to [80, 80]
